@@ -7,17 +7,39 @@ import {
   View,
   TouchableOpacity,
 } from 'react-native';
+import {getService} from './services/axiosServices';
 
 class App extends Component {
   constructor() {
     super();
     this.state = {
+      code: '',
       showCode: false,
     };
   }
 
+  componentDidMount = () => {
+    getService('/discount')
+      .then((res) => {
+        this.setState({code: res.data?.code});
+      })
+      .catch((err) => {
+        if (err.response?.data?.message === 'code expired!') {
+          return this.setState({code: 'EXPIRED', showCode: true});
+        }
+
+        alert('something went wrong!');
+      });
+  };
+
+  showCode = () => {
+    this.setState({
+      showCode: true,
+    });
+  };
+
   render() {
-    const {showCode} = this.state;
+    const {code, showCode} = this.state;
 
     return (
       <ScrollView contentContainerStyle={styles.container}>
@@ -37,15 +59,14 @@ class App extends Component {
         />
         <View style={styles.discountContainer}>
           {showCode ? (
-            <Text style={styles.code}>6587</Text>
+            <Text
+              style={[styles.code, code === 'EXPIRED' && styles.codeExpired]}>
+              {code}
+            </Text>
           ) : (
             <TouchableOpacity
               style={styles.discountButton}
-              onPress={() => {
-                this.setState({
-                  showCode: true,
-                });
-              }}>
+              onPress={this.showCode}>
               <Text style={styles.text}>Discount</Text>
             </TouchableOpacity>
           )}
@@ -113,6 +134,10 @@ const styles = StyleSheet.create({
     color: '#CDE126',
     fontWeight: 'bold',
     marginRight: 25,
+  },
+  codeExpired: {
+    color: 'red',
+    textDecorationLine: 'line-through',
   },
   description: {
     margin: 30,
