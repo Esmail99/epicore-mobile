@@ -6,8 +6,12 @@ import {
   Image,
   View,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
 import {getService} from './services/axiosServices';
+import socketIOClient from 'socket.io-client';
+
+const socket = socketIOClient('https://epicore.herokuapp.com');
 
 class App extends Component {
   constructor() {
@@ -15,10 +19,16 @@ class App extends Component {
     this.state = {
       code: '',
       showCode: false,
+      modalVisible: false,
     };
   }
 
   componentDidMount = () => {
+    // Connecting Socket.io
+    socket.on('codeVerifiedSuccessfully', (data) => {
+      this.changeModalState();
+    });
+
     getService('/discount')
       .then((res) => {
         this.setState({code: res.data?.code});
@@ -38,8 +48,16 @@ class App extends Component {
     });
   };
 
+  changeModalState = () => {
+    this.setState((prevState) => {
+      return {
+        modalVisible: !prevState.modalVisible,
+      };
+    });
+  };
+
   render() {
-    const {code, showCode} = this.state;
+    const {code, showCode, modalVisible} = this.state;
 
     return (
       <ScrollView contentContainerStyle={styles.container}>
@@ -75,6 +93,25 @@ class App extends Component {
         <Text style={[styles.boldText, styles.description]}>
           2 Big King Tower sandwiches for 45 EGP instead of 87 EGP
         </Text>
+        <Modal animationType="slide" transparent={true} visible={modalVisible}>
+          <View style={styles.container}>
+            <View style={styles.modalView}>
+              <Text style={styles.text}>Did you get your coupon?</Text>
+              <View style={styles.restaurantInfo}>
+                <TouchableOpacity
+                  style={styles.discountButton}
+                  onPress={this.changeModalState}>
+                  <Text style={styles.text}>Yes</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.discountButton}
+                  onPress={this.changeModalState}>
+                  <Text style={styles.text}>No</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     );
   }
@@ -100,6 +137,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     paddingLeft: 25,
+    marginTop: 10,
   },
   restaurantLogo: {
     width: 100,
@@ -128,6 +166,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 30,
     borderColor: '#CDE126',
+    marginHorizontal: 4,
   },
   code: {
     fontSize: 38,
@@ -141,6 +180,21 @@ const styles = StyleSheet.create({
   },
   description: {
     margin: 30,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
 });
 
