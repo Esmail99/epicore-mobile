@@ -7,6 +7,7 @@ import {
   View,
   TouchableOpacity,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import {getService} from './services/axiosServices';
 import socketIOClient from 'socket.io-client';
@@ -20,6 +21,7 @@ class App extends Component {
       code: '',
       showCode: false,
       modalVisible: false,
+      loading: true,
     };
   }
 
@@ -31,11 +33,15 @@ class App extends Component {
 
     getService('/discount')
       .then((res) => {
-        this.setState({code: res.data?.code});
+        this.setState({code: res.data?.code, loading: false});
       })
       .catch((err) => {
         if (err.response?.data?.message === 'code expired!') {
-          return this.setState({code: 'EXPIRED', showCode: true});
+          return this.setState({
+            code: 'EXPIRED',
+            showCode: true,
+            loading: false,
+          });
         }
 
         alert('something went wrong!');
@@ -57,7 +63,7 @@ class App extends Component {
   };
 
   render() {
-    const {code, showCode, modalVisible} = this.state;
+    const {code, showCode, modalVisible, loading} = this.state;
 
     return (
       <ScrollView contentContainerStyle={styles.container}>
@@ -75,21 +81,25 @@ class App extends Component {
           source={require('./assets/imgs/cover.jpg')}
           style={styles.coverImage}
         />
-        <View style={styles.discountContainer}>
-          {showCode ? (
-            <Text
-              style={[styles.code, code === 'EXPIRED' && styles.codeExpired]}>
-              {code}
-            </Text>
-          ) : (
-            <TouchableOpacity
-              style={styles.discountButton}
-              onPress={this.showCode}>
-              <Text style={styles.text}>Discount</Text>
-            </TouchableOpacity>
-          )}
-          <Text style={styles.text}>1648 Favorites</Text>
-        </View>
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          <View style={styles.discountContainer}>
+            {showCode ? (
+              <Text
+                style={[styles.code, code === 'EXPIRED' && styles.codeExpired]}>
+                {code}
+              </Text>
+            ) : (
+              <TouchableOpacity
+                style={styles.discountButton}
+                onPress={this.showCode}>
+                <Text style={styles.text}>Discount</Text>
+              </TouchableOpacity>
+            )}
+            <Text style={styles.text}>1648 Favorites</Text>
+          </View>
+        )}
         <Text style={[styles.boldText, styles.description]}>
           2 Big King Tower sandwiches for 45 EGP instead of 87 EGP
         </Text>
