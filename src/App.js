@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -14,118 +14,99 @@ import socketIOClient from 'socket.io-client';
 
 const socket = socketIOClient('https://epicore.herokuapp.com');
 
-class App extends Component {
-  constructor() {
-    super();
-    this.state = {
-      code: '',
-      showCode: false,
-      modalVisible: false,
-      loading: true,
-    };
-  }
+const App = () => {
+  const [code, setCode] = useState('');
+  const [showCode, setShowCode] = useState(false);
+  const [modalVisible, setModalVisible] = useState(!false);
+  const [loading, setLoading] = useState(true);
 
-  componentDidMount = () => {
+  useEffect(() => {
     // Connecting Socket.io
-    socket.on('codeVerifiedSuccessfully', (data) => {
-      this.changeModalState();
+    socket.on('codeVerifiedSuccessfully', () => {
+      changeModalState();
     });
 
     getService('/discount')
       .then((res) => {
-        this.setState({code: res.data?.code, loading: false});
+        setCode(res.data?.code);
+        setLoading(false);
       })
       .catch((err) => {
         if (err.response?.data?.message === 'code expired!') {
-          return this.setState({
-            code: 'EXPIRED',
-            showCode: true,
-            loading: false,
-          });
+          setCode('EXPIRED');
+          setShowCode(true);
+          return setLoading(false);
         }
 
-        // alert('something went wrong!');
+        alert('something went wrong!');
       });
+  }, []);
+
+  const changeModalState = () => {
+    setModalVisible(!modalVisible);
+    // setModalVisible(prevState => !prevState.modalVisible)
   };
 
-  showCode = () => {
-    this.setState({
-      showCode: true,
-    });
-  };
-
-  changeModalState = () => {
-    this.setState((prevState) => {
-      return {
-        modalVisible: !prevState.modalVisible,
-      };
-    });
-  };
-
-  render() {
-    const {code, showCode, modalVisible, loading} = this.state;
-
-    return (
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.restaurantInfo}>
-          <Image
-            source={require('./assets/imgs/burger-king-logo.png')}
-            style={styles.restaurantLogo}
-          />
-          <View>
-            <Text style={styles.boldText}>Burger King</Text>
-            <Text style={[styles.text, styles.category]}>Food</Text>
-          </View>
-        </View>
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.restaurantInfo}>
         <Image
-          source={require('./assets/imgs/cover.jpg')}
-          style={styles.coverImage}
+          source={require('./assets/imgs/burger-king-logo.png')}
+          style={styles.restaurantLogo}
         />
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : (
-          <View style={styles.discountContainer}>
-            {showCode ? (
-              <Text
-                style={[styles.code, code === 'EXPIRED' && styles.codeExpired]}>
-                {code}
-              </Text>
-            ) : (
+        <View>
+          <Text style={styles.boldText}>Burger King</Text>
+          <Text style={[styles.text, styles.category]}>Food</Text>
+        </View>
+      </View>
+      <Image
+        source={require('./assets/imgs/cover.jpg')}
+        style={styles.coverImage}
+      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <View style={styles.discountContainer}>
+          {showCode ? (
+            <Text
+              style={[styles.code, code === 'EXPIRED' && styles.codeExpired]}>
+              {code}
+            </Text>
+          ) : (
+            <TouchableOpacity
+              style={styles.discountButton}
+              onPress={() => setShowCode(true)}>
+              <Text style={styles.text}>Discount</Text>
+            </TouchableOpacity>
+          )}
+          <Text style={styles.text}>1648 Favorites</Text>
+        </View>
+      )}
+      <Text style={[styles.boldText, styles.description]}>
+        2 Big King Tower sandwiches for 45 EGP instead of 87 EGP
+      </Text>
+      <Modal animationType="slide" transparent={true} visible={modalVisible}>
+        <View style={styles.container}>
+          <View style={styles.modalView}>
+            <Text style={styles.text}>Did you get your coupon?</Text>
+            <View style={styles.restaurantInfo}>
               <TouchableOpacity
                 style={styles.discountButton}
-                onPress={this.showCode}>
-                <Text style={styles.text}>Discount</Text>
+                onPress={changeModalState}>
+                <Text style={styles.text}>Yes</Text>
               </TouchableOpacity>
-            )}
-            <Text style={styles.text}>1648 Favorites</Text>
-          </View>
-        )}
-        <Text style={[styles.boldText, styles.description]}>
-          2 Big King Tower sandwiches for 45 EGP instead of 87 EGP
-        </Text>
-        <Modal animationType="slide" transparent={true} visible={modalVisible}>
-          <View style={styles.container}>
-            <View style={styles.modalView}>
-              <Text style={styles.text}>Did you get your coupon?</Text>
-              <View style={styles.restaurantInfo}>
-                <TouchableOpacity
-                  style={styles.discountButton}
-                  onPress={this.changeModalState}>
-                  <Text style={styles.text}>Yes</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.discountButton}
-                  onPress={this.changeModalState}>
-                  <Text style={styles.text}>No</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                style={styles.discountButton}
+                onPress={changeModalState}>
+                <Text style={styles.text}>No</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-      </ScrollView>
-    );
-  }
-}
+        </View>
+      </Modal>
+    </ScrollView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
