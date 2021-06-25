@@ -32,6 +32,7 @@ const Home = () => {
   const {loading, error, data} = useQuery(GET_DISCOUNT);
 
   useEffect(() => {
+    if (loading) return;
     if (error) {
       return alert('something went wrong!');
     }
