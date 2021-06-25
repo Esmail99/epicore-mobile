@@ -9,7 +9,7 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import {getService} from './services/axiosServices';
+import {getService} from './services/API';
 import socketIOClient from 'socket.io-client';
 
 const socket = socketIOClient('https://epicore.herokuapp.com');
@@ -44,7 +44,7 @@ class App extends Component {
           });
         }
 
-        alert('something went wrong!');
+        // alert('something went wrong!');
       });
   };
 
