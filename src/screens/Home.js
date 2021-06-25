@@ -9,10 +9,7 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-// import socketIOClient from 'socket.io-client';
-import {useQuery, gql} from '@apollo/client';
-
-// const socket = socketIOClient('https://epicore.herokuapp.com');
+import {useQuery, gql, useSubscription} from '@apollo/client';
 
 const GET_DISCOUNT = gql`
   query GetDiscount {
@@ -25,11 +22,18 @@ const GET_DISCOUNT = gql`
   }
 `;
 
+const ON_DISCOUNT_VERIFIED = gql`
+  subscription {
+    discountVerified
+  }
+`;
+
 const Home = () => {
   const [code, setCode] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const {loading, error, data} = useQuery(GET_DISCOUNT);
+  const {loading, error, data: discountData} = useQuery(GET_DISCOUNT);
+  const {data: subscriptionData} = useSubscription(ON_DISCOUNT_VERIFIED);
 
   useEffect(() => {
     if (loading) return;
@@ -37,23 +41,22 @@ const Home = () => {
       return alert('something went wrong!');
     }
 
-    if (data?.discount?.success) {
-      setCode(data?.discount?.discount?.code);
+    if (discountData?.discount?.success) {
+      setCode(discountData?.discount?.discount?.code);
     } else {
       setCode('EXPIRED');
       setShowCode(true);
     }
   }, [loading]);
 
-  //   useEffect(() => {
-  //     // Connecting Socket.io
-  //     socket.on('codeVerifiedSuccessfully', () => {
-  //       changeModalState();
-  //     });
-  //   }, []);
+  useEffect(() => {
+    if (subscriptionData?.discountVerified) {
+      changeModalState();
+    }
+  }, [subscriptionData]);
 
   const changeModalState = () => {
-    setModalVisible((prevState) => !prevState.modalVisible);
+    setModalVisible(!modalVisible);
   };
 
   return (
