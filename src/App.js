@@ -10,7 +10,7 @@ import {setContext} from '@apollo/client/link/context';
 import {getMainDefinition} from '@apollo/client/utilities';
 import {WebSocketLink} from '@apollo/client/link/ws';
 import Home from './screens/Home';
-import {AUTH_PASSWORD} from './config';
+import {AUTH_PASSWORD} from '../config';
 
 const httpLink = new HttpLink({
   uri: 'https://epicore.herokuapp.com',
